@@ -1,0 +1,17 @@
+<mat-drawer-container class="container" autosize>
+    <mat-drawer #drawer class="sidenav" mode="side" opened>
+        <mat-nav-list class="nav-list">
+            <a mat-list-item routerLink="/" routerLinkActive="active">
+                <i class="material-icons">home</i>Home
+            </a>
+            <a mat-list-item routerLink="dashboard" routerLinkActive="active">
+                <i class="material-icons">pie_chart</i>Dashboard
+            </a>
+        </mat-nav-list>
+    </mat-drawer>
+
+    <div class="sidenav-content">
+        <router-outlet></router-outlet>
+    </div>
+
+</mat-drawer-container>
