@@ -1,0 +1,6 @@
+@Onion.SGV.API_HostAddress = http://localhost:5136
+
+GET {{Onion.SGV.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
