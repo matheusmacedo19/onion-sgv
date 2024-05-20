@@ -68,7 +68,7 @@ namespace Onion.SGV.API.Controllers
                                 
                                 //Product
                                 string? productName = worksheet.Cells[row, 4].Value?.ToString();
-                                product = _productService.Get(productName); 
+                                product = await _productService.Get(productName); 
                                 
                                 //Order
                                 order.ProductId = product.Id;
