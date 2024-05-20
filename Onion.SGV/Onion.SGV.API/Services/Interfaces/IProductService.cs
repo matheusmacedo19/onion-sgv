@@ -4,7 +4,7 @@ namespace Onion.SGV.API.Services.Interfaces
 {
     public interface IProductService
     {
-        Product Get(int id);
+        Product Get(string id);
         List<Product> GetAll();
     }
 }

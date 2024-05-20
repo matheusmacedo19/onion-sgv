@@ -12,6 +12,6 @@ namespace Onion.SGV.API.Models
         public string Cep { get; set; }
 
         //Associações
-        public virtual List<Order> Orders { get; set; }
+        public ICollection<Order> Orders { get;} = new List<Order>();
     }
 }

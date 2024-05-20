@@ -21,32 +21,46 @@ namespace Onion.SGV.API.Models
         public int OrderId { get; set; }
         public DateTime OrderDate { get; set; }
 
-        public async Task<double> RetrieveTaxDelivery(long cep)
+        public async Task<double> RetrieveTaxDelivery(string cep, double price)
         {
-            Location location = await GetLocation(cep);
-            Task<string> region = GetRegion(location.Ibge);
-            double taxDelivery = 0;
-            
-            if(location.Uf == "SP")
+            try
             {
+                Location location = await GetLocation(cep);
+                string region = await GetRegion(location.Ibge);
+                double taxDelivery = 0;
+
+                if (location.Uf == "SP")
+                {
+                    return price + 0;
+                }
+
+                switch (region)
+                {
+                    case "Norte":
+                    case "Nordeste":
+                        taxDelivery = price + (price * 0.3);
+                        break;
+                    case "Centro-Oeste":
+                    case "Sul":
+                        taxDelivery = price + (price * 0.2);
+                        break;
+                    case "Sudeste":
+                        taxDelivery = price + (price * 0.1);
+                        break;
+                    default:
+                        taxDelivery = 0;
+                        break;
+                }
+
+                return taxDelivery;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ocorreu um erro ao calcular a taxa de entrega: {ex.Message}");
                 return 0;
             }
-            
-            switch (region.Result)
-            {
-                case "Norte": case "Nordeste":
-                     taxDelivery = ProductPrice * 30/100;
-                    break;
-                case "Centro-Oeste": case "Sul":
-                    taxDelivery = ProductPrice * 20/100;
-                    break;
-                case "Sudeste":
-                    taxDelivery = ProductPrice * 10 / 100;
-                    break;
-            }
-            return taxDelivery;
         }
-        public async Task<DateTime> EstimateDeliveryDate(long cep)
+        public async Task<DateTime> EstimateDeliveryDate(string cep, DateTime orderDate)
         {
             try
             {
@@ -57,14 +71,14 @@ namespace Onion.SGV.API.Models
                 {
                     case "Norte": 
                     case "Nordeste": 
-                        deliveryDate = BusinessDays.AddBusinessDays(OrderDate, 10);
+                        deliveryDate = BusinessDays.AddBusinessDays(orderDate, 10);
                         break;
                     case "Centro-Oeste":
                     case "Sul":
-                        deliveryDate = BusinessDays.AddBusinessDays(OrderDate, 5);
+                        deliveryDate = BusinessDays.AddBusinessDays(orderDate, 5);
                         break;
                     case "Sudeste":
-                        deliveryDate = BusinessDays.AddBusinessDays(OrderDate, 1);
+                        deliveryDate = BusinessDays.AddBusinessDays(orderDate, 1);
                         break;
                 }
                 return deliveryDate;
@@ -75,12 +89,12 @@ namespace Onion.SGV.API.Models
             }
         }
 
-        private static async Task<Location> GetLocation(long cep)
+        private static async Task<Location> GetLocation(string cep)
         {
             try
             {
                 HttpClient client = new HttpClient();
-                client.BaseAddress = new Uri("viacep.com.br/ws/");
+                client.BaseAddress = new Uri("https://viacep.com.br/ws/");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 string url = cep + "/json/";
@@ -104,10 +118,10 @@ namespace Onion.SGV.API.Models
             try
             {
                 HttpClient client = new HttpClient();
-                client.BaseAddress = new Uri("https://servicodados.ibge.gov.br/api/v1/localidades/municipios");
+                client.BaseAddress = new Uri("https://servicodados.ibge.gov.br");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 Regiao? region = new Regiao();
-                string url = "/" + id;
+                string url = "/api/v1/localidades/municipios/" + id;
                 HttpResponseMessage response = await client.GetAsync(url);
                 Task<string> jsonString;
                 if (response.IsSuccessStatusCode)

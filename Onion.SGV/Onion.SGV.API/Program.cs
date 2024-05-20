@@ -1,23 +1,18 @@
 using Onion.SGV.API.Data;
+using Onion.SGV.API.Models;
 using Onion.SGV.API.Services;
 using Onion.SGV.API.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
+    options.AddPolicy("_myAllowSpecificOrigins",
         builder =>
         {
-            builder.WithOrigins("http://localhost",
-                "http://localhost:4200",
-                "https://localhost:7230",
-                "http://localhost:90")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .SetIsOriginAllowedToAllowWildcardSubdomains();
+            builder.WithOrigins("http://localhost/*", "https://localhost:44322", "http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         });
 });
 
@@ -44,10 +39,41 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors("_myAllowSpecificOrigins");
 
 app.UseAuthorization();
 
 app.MapControllers();
 
+SeedProdutos(app);
+
 app.Run();
+void SeedProdutos(WebApplication app)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var dbContext = services.GetRequiredService<MyDbContext>();
+
+        // Verifica se já existem produtos no banco de dados
+        if (dbContext.Products.Any())
+        {
+            return; // Se já existirem produtos, não faz nada
+        }
+
+        // Adiciona produtos ao contexto
+        var products = new[]
+        {
+            new Product { Id = 1, Name = "Celular", Price = 1000.0 },
+            new Product { Id = 2, Name = "Notebook", Price = 3000.0 },
+            new Product { Id = 3, Name = "Televisão", Price = 5000.0 } 
+        };
+
+        foreach (var item in products)
+        {
+            dbContext.Products.Add(item);
+        }
+
+        dbContext.SaveChanges(); // Salva as alterações no banco de dados
+    }
+}

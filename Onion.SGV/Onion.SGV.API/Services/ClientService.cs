@@ -1,6 +1,8 @@
-﻿using Onion.SGV.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Onion.SGV.API.Data;
 using Onion.SGV.API.Models;
 using Onion.SGV.API.Services.Interfaces;
+using System.Reflection.Metadata;
 
 namespace Onion.SGV.API.Services
 {
@@ -11,41 +13,42 @@ namespace Onion.SGV.API.Services
         {
             _dbContext = dbContext;
         }
-        public void Add(Client client)
+        public async void Add(Client client)
         {
-            if(_dbContext.Clients.Find(client.Document) != null)
+            try
             {
-                _dbContext.Clients.Add(client);
+                var clientTest = _dbContext.Clients.Where(x=>x.Document.Equals(client.Document)).FirstOrDefault();
+                if (clientTest == null)
+                {
+                    await _dbContext.Clients.AddAsync(client);
+                    _dbContext.SaveChanges();
+                }
+
+            }catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<Client> Get(int document)
+        {
+            
+            Client? client = await _dbContext.Clients.Include(x=> x.Orders).Where(x=>x.Document.Equals(document)).FirstOrDefaultAsync();
+            
+            if(client != null)
+            {
+                return client;
             }
             else
             {
-                throw new Exception("Cliente com documento: "+client.Document+" ja existe!");
+                throw new Exception("Cliente não encontrado!");
             }
-        }
-        public Client Get(int document)
-        {
-            return _dbContext.Clients.Where(x=> x.Document.Equals(document)).FirstOrDefault();
+
         }
 
-        public List<Client> GetAll()
+        public async Task<IEnumerable<Client>> GetAll()
         {
-            return _dbContext.Clients.ToList();
-        }
-
-        public void CommitTransaction()
-        {
-            _dbContext.Database.CommitTransaction();
-        }
-
-
-        public void OpenTransaction()
-        {
-            _dbContext.Database.BeginTransaction();
-        }
-
-        public void RollTransaction()
-        {
-            _dbContext.Database.RollbackTransaction();
+            IEnumerable<Client> clients = await _dbContext.Clients.Include(s=>s.Orders).ThenInclude(x=>x.Product).ToListAsync();
+            return clients;
         }
     }
 }

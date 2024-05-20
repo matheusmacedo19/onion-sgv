@@ -6,14 +6,23 @@ namespace Onion.SGV.API.Services
 {
     public class ProductService : IProductService
     {
-        private readonly MyDbContext _dbcontext;
+        private MyDbContext _dbcontext;
         public ProductService(MyDbContext dbcontext)
         {
             _dbcontext = dbcontext;
         }
-        public Product Get(int id)
+        public Product Get(string nome)
         {
-            throw new NotImplementedException();
+            Product? productResult = _dbcontext.Products.Where(p => p.Name.Equals(nome)).FirstOrDefault();
+
+            if (productResult != null)
+            {
+                return productResult;
+            }
+            else
+            {
+                return productResult = new Product();
+            }
         }
 
         public List<Product> GetAll()

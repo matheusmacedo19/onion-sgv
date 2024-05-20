@@ -1,4 +1,6 @@
-﻿using Onion.SGV.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using NuGet.Versioning;
+using Onion.SGV.API.Data;
 using Onion.SGV.API.Models;
 using Onion.SGV.API.Services.Interfaces;
 
@@ -13,19 +15,21 @@ namespace Onion.SGV.API.Services
         }
         public void Add(Order order)
         {
-            if(_dbContext.Orders.Find(order.Id) == null)
+            var orderExists = _dbContext.Orders.Any(x => x.Id == order.Id);
+            if (!orderExists)
             {
                 _dbContext.Orders.Add(order);
+                _dbContext.SaveChanges();
             }
             else
             {
-                throw new Exception("Pedido de número: " + order.Id + " ja existe!");
+                throw new InvalidOperationException("Pedido de número: " + order.Id + " já existe!");
             }
         }
 
-        public Order Get(int id)
+        public async Task<Order> Get(int id)
         {
-            Order? order = _dbContext.Orders.Find(id);
+            Order? order = await _dbContext.Orders.Include(x => x.Product).Include(x=> x.Client).Where( x => x.Id == id).FirstOrDefaultAsync();
             
             if(order != null)
             {
@@ -37,26 +41,10 @@ namespace Onion.SGV.API.Services
             }
         }
 
-        public List<Order> GetAll()
+        public async Task<IEnumerable<Order>> GetAll()
         {
-            List<Order> list = _dbContext.Orders.OrderByDescending(x => x.Id).ToList();
+            var list = await _dbContext.Orders.Include(s=>s.Client).Include(s=>s.Product).ToListAsync();
             return list;
-        }
-
-        public void CommitTransaction()
-        {
-            _dbContext.Database.CommitTransaction();
-        }
-
-
-        public void OpenTransaction()
-        {
-            _dbContext.Database.BeginTransaction();
-        }
-
-        public void RollTransaction()
-        {
-            _dbContext.Database.RollbackTransaction();
         }
     }
 }
