@@ -21,6 +21,7 @@ namespace Onion.SGV.API.Models
         public int ProductId { get; set; }
         public int OrderId { get; set; }
         public DateTime OrderDate { get; set; }
+        public string Region { get; set; }
 
         public async Task<double> RetrieveTaxDelivery(string cep, double price)
         {
@@ -105,7 +106,7 @@ namespace Onion.SGV.API.Models
             }
         }
 
-        private static async Task<Location> GetLocation(string cep)
+        public async Task<Location> GetLocation(string cep)
         {
             try
             {
@@ -145,7 +146,7 @@ namespace Onion.SGV.API.Models
             }
         }
 
-        private static async Task<string> GetRegion(string id)
+        public async Task<string> GetRegion(string id)
         {
             try
             {

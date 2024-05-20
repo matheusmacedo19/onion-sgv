@@ -29,6 +29,7 @@ namespace Onion.SGV.API.Controllers
                 foreach (Order order in orderList)
                 {
                     OrderDashboard orderDashboard = new OrderDashboard();
+                    Location location = await orderDashboard.GetLocation(order.Client.Cep);
                     orderDashboard.Document = order.Client?.Document;
                     orderDashboard.Socialname = order.Client?.SocialName;
                     orderDashboard.Cep = order.Client?.Cep;
@@ -37,6 +38,7 @@ namespace Onion.SGV.API.Controllers
                     orderDashboard.OrderDate = orderDashboard.EstimateDeliveryDate(order.Client?.Cep, order.OrderDate).Result;
                     orderDashboard.ProductId = order.ProductId.Value;
                     orderDashboard.ProductPrice = orderDashboard.RetrieveTaxDelivery(order.Client?.Cep, order.Product.Price).Result;
+                    orderDashboard.Region = await orderDashboard.GetRegion(location.Ibge);
                     orderDashboardList.Add(orderDashboard);
                 }
                 return Ok(orderDashboardList);
