@@ -21,7 +21,7 @@ namespace Onion.SGV.API.Services
                 if (clientTest == null)
                 {
                     await _dbContext.Clients.AddAsync(client);
-                    _dbContext.SaveChanges();
+                    await _dbContext.SaveChangesAsync();
                 }
 
             }catch(Exception ex)

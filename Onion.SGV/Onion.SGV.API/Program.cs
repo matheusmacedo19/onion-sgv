@@ -55,13 +55,11 @@ void SeedProdutos(WebApplication app)
         var services = scope.ServiceProvider;
         var dbContext = services.GetRequiredService<MyDbContext>();
 
-        // Verifica se já existem produtos no banco de dados
         if (dbContext.Products.Any())
         {
-            return; // Se já existirem produtos, não faz nada
+            return; 
         }
 
-        // Adiciona produtos ao contexto
         var products = new[]
         {
             new Product { Id = 1, Name = "Celular", Price = 1000.0 },
@@ -74,6 +72,6 @@ void SeedProdutos(WebApplication app)
             dbContext.Products.Add(item);
         }
 
-        dbContext.SaveChanges(); // Salva as alterações no banco de dados
+        dbContext.SaveChanges();
     }
 }

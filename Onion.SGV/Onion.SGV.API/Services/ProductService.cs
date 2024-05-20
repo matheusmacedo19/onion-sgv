@@ -1,4 +1,5 @@
-﻿using Onion.SGV.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Onion.SGV.API.Data;
 using Onion.SGV.API.Models;
 using Onion.SGV.API.Services.Interfaces;
 
@@ -11,24 +12,24 @@ namespace Onion.SGV.API.Services
         {
             _dbcontext = dbcontext;
         }
-        public Product Get(string nome)
+        public async Task<Product> Get(string nome)
         {
-            Product? productResult = _dbcontext.Products.Where(p => p.Name.Equals(nome)).FirstOrDefault();
+            try
+            {
+                Product? productResult = await _dbcontext.Products.Where(p => p.Name.Equals(nome)).FirstOrDefaultAsync();
 
-            if (productResult != null)
+                if (productResult != null)
+                {
+                    return productResult;
+                }
+                else
+                {
+                    return productResult = new Product();
+                }
+            }catch (Exception ex)
             {
-                return productResult;
-            }
-            else
-            {
-                return productResult = new Product();
+                throw;
             }
         }
-
-        public List<Product> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }

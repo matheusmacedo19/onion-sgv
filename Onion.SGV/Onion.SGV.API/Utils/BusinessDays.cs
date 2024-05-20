@@ -7,24 +7,32 @@
             if (businessDaysToAdd == 0)
                 return initialDate;
 
-            DateTime newDate = initialDate;
+            int direction = Math.Sign(businessDaysToAdd);
+
+            int totalDaysToAdd = Math.Abs(businessDaysToAdd);
             int addedDays = 0;
 
-            while (addedDays < businessDaysToAdd)
+            DateTime newDate = initialDate;
+
+            while (addedDays < totalDaysToAdd)
             {
-                newDate = newDate.AddDays(1);
+                newDate = newDate.AddDays(direction);
+
                 if (IsBusinessDay(newDate))
                     addedDays++;
             }
+
             return newDate;
         }
 
         private static bool IsBusinessDay(DateTime date)
         {
-            if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
-                return true;
-
-            return false;
+            return date.DayOfWeek switch
+            {
+                DayOfWeek.Saturday => false,
+                DayOfWeek.Sunday => false,
+                _ => true,
+            };
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Onion.SGV.API.Utils;
 using System.ComponentModel.DataAnnotations;
@@ -56,7 +57,7 @@ namespace Onion.SGV.API.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ocorreu um erro ao calcular a taxa de entrega: {ex.Message}");
+                var e = new Exception(string.Format($"Ocorreu um erro ao calcular a taxa de entrega: {ex.Message}"));
                 return 0;
             }
         }
@@ -64,13 +65,15 @@ namespace Onion.SGV.API.Models
         {
             try
             {
-                Location location =  await GetLocation(cep);
-                Task<string> region = GetRegion(location.Ibge);
-                DateTime deliveryDate = new DateTime();
-                switch (region.Result)
+                Location location = await GetLocation(cep);
+                string region = await GetRegion(location.Ibge);
+
+                DateTime deliveryDate = default;
+
+                switch (region)
                 {
-                    case "Norte": 
-                    case "Nordeste": 
+                    case "Norte":
+                    case "Nordeste":
                         deliveryDate = BusinessDays.AddBusinessDays(orderDate, 10);
                         break;
                     case "Centro-Oeste":
@@ -81,10 +84,23 @@ namespace Onion.SGV.API.Models
                         deliveryDate = BusinessDays.AddBusinessDays(orderDate, 1);
                         break;
                 }
+
                 return deliveryDate;
 
-            }catch (Exception ex)
+            }
+            catch (HttpRequestException ex)
             {
+                var e = new Exception(string.Format($"Erro na solicitação HTTP: {ex.Message}"));
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                var e = new Exception(string.Format($"Erro na desserialização JSON: {ex.Message}"));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                var e = new Exception(string.Format($"Erro inesperado: {ex.Message}"));
                 throw;
             }
         }
@@ -93,57 +109,81 @@ namespace Onion.SGV.API.Models
         {
             try
             {
-                HttpClient client = new HttpClient();
-                client.BaseAddress = new Uri("https://viacep.com.br/ws/");
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                string url = cep + "/json/";
-                HttpResponseMessage response = await client.GetAsync(url);
-                Task<string> jsonString;
-                if (response.IsSuccessStatusCode)
+                using (HttpClient client = new HttpClient())
                 {
-                    jsonString = response.Content.ReadAsStringAsync();
-                    return JsonConvert.DeserializeObject<Location>(jsonString.Result);
-                }
-                return null;
+                    client.BaseAddress = new Uri("https://viacep.com.br/ws/");
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            }catch (Exception ex)
+                    string url = $"{cep}/json/";
+                    HttpResponseMessage response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Location? content = await response.Content.ReadFromJsonAsync<Location>();
+                        if (content != null)
+                            return content;
+                    }
+                    return new Location();
+                }
+            }
+            catch (HttpRequestException ex)
             {
+                
+                var e = new Exception(string.Format($"Erro na solicitação HTTP: {ex.Message}"));
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                
+                var e = new Exception(string.Format($"Erro na desserialização JSON: {ex.Message}"));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                var e = new Exception(string.Format($"Erro inesperado: {ex.Message}"));
                 throw;
             }
         }
-        
+
         private static async Task<string> GetRegion(string id)
         {
             try
             {
-                HttpClient client = new HttpClient();
-                client.BaseAddress = new Uri("https://servicodados.ibge.gov.br");
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                Regiao? region = new Regiao();
-                string url = "/api/v1/localidades/municipios/" + id;
-                HttpResponseMessage response = await client.GetAsync(url);
-                Task<string> jsonString;
-                if (response.IsSuccessStatusCode)
+                using (HttpClient client = new HttpClient())
                 {
-                    jsonString = response.Content.ReadAsStringAsync();
-                    var parsedObject = JObject.Parse(jsonString.Result);
-                    var regionJson = parsedObject["microrregiao"]["mesorregiao"]["UF"]["regiao"].ToString();
-                    region = JsonConvert.DeserializeObject<Regiao>(regionJson);
-                }
-                if(region != null )
-                {
-                    return region.Nome;
-                }else
-                {
+                    client.BaseAddress = new Uri("https://servicodados.ibge.gov.br");
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    string url = $"/api/v1/localidades/municipios/{id}";
+                    HttpResponseMessage response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadFromJsonAsync<Ibge>();
+                        if (content != null)
+                        {
+                            return content.Microrregiao.Mesorregiao.Uf.Regiao.Nome;
+                        }
+                    }
                     return string.Empty;
                 }
-            }catch (Exception ex) 
-            { 
+            }
+            catch (HttpRequestException ex)
+            {
+                var e = new Exception(string.Format($"Erro na solicitação HTTP: {ex.Message}"));
                 throw;
             }
-
+            catch (JsonException ex)
+            {
+                var e = new Exception(string.Format($"Erro na desserialização JSON: {ex.Message}"));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                var e = new Exception(string.Format($"Erro inesperado: {ex.Message}"));
+                throw;
+            }
         }
-        
+
     }
 }

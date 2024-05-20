@@ -7,14 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Helpers\**" />
     <Compile Remove="NovaPasta\**" />
+    <Content Remove="Helpers\**" />
     <Content Remove="NovaPasta\**" />
+    <EmbeddedResource Remove="Helpers\**" />
     <EmbeddedResource Remove="NovaPasta\**" />
+    <None Remove="Helpers\**" />
     <None Remove="NovaPasta\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Controllers\ProdutoTestesController.cs" />
+    <Compile Remove="Utils\MapOrderDashboard.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,10 +32,6 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Helpers\" />
   </ItemGroup>
 
 </Project>

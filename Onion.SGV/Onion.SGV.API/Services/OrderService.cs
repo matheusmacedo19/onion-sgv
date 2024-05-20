@@ -15,36 +15,57 @@ namespace Onion.SGV.API.Services
         }
         public void Add(Order order)
         {
-            var orderExists = _dbContext.Orders.Any(x => x.Id == order.Id);
-            if (!orderExists)
+            try
             {
-                _dbContext.Orders.Add(order);
-                _dbContext.SaveChanges();
-            }
-            else
+                var orderExists = _dbContext.Orders.Any(x => x.Id == order.Id);
+                if (!orderExists)
+                {
+                    _dbContext.Orders.Add(order);
+                    _dbContext.SaveChanges();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Pedido de número: " + order.Id + " já existe!");
+                }
+                
+            }catch(Exception ex) 
             {
-                throw new InvalidOperationException("Pedido de número: " + order.Id + " já existe!");
+                throw;
             }
         }
 
         public async Task<Order> Get(int id)
         {
-            Order? order = await _dbContext.Orders.Include(x => x.Product).Include(x=> x.Client).Where( x => x.Id == id).FirstOrDefaultAsync();
+            try
+            {
+                Order? order = await _dbContext.Orders.Include(x => x.Product).Include(x=> x.Client).Where( x => x.Id == id).FirstOrDefaultAsync();
             
-            if(order != null)
+                if(order != null)
+                {
+                    return order;
+                }
+                else
+                {
+                     return new Order();
+                }
+
+            }catch(Exception ex)
             {
-                return order;
-            }
-            else
-            {
-                 return new Order();
+                throw;
             }
         }
 
         public async Task<IEnumerable<Order>> GetAll()
         {
-            var list = await _dbContext.Orders.Include(s=>s.Client).Include(s=>s.Product).ToListAsync();
-            return list;
+            try
+            {
+                var list = await _dbContext.Orders.Include(s=>s.Client).Include(s=>s.Product).ToListAsync();
+                return list;
+
+            }catch(Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

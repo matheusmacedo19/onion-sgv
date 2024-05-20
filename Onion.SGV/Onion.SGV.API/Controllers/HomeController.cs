@@ -25,19 +25,6 @@ namespace Onion.SGV.API.Controllers
             _productService = productService;
             _orderService = orderService;
         }
-        // GET: api/<HomeController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<HomeController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
 
         // POST api/<HomeController>
         [HttpPost]

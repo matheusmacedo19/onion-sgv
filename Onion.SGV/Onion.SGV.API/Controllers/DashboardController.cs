@@ -14,10 +14,8 @@ namespace Onion.SGV.API.Controllers
     {
         private readonly IOrderService _orderService;
 
-        public DashboardController(IClientService clientService, IProductService productService, IOrderService orderService)
+        public DashboardController(IOrderService orderService)
         {
-            _clientService = clientService;
-            _productService = productService;
             _orderService = orderService;
         }
         // GET: api/<DashboardController>
@@ -45,7 +43,7 @@ namespace Onion.SGV.API.Controllers
 
             }catch(Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, $"Ocorreu um erro ao buscar lista de pedidos: {ex.Message}");
             }
         }
 
@@ -53,16 +51,23 @@ namespace Onion.SGV.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            Order order = await _orderService.Get(id);
-            OrderDashboard orderDashboard = new OrderDashboard();
-            orderDashboard.Document = order.Client?.Document;
-            orderDashboard.Socialname = order.Client?.SocialName;
-            orderDashboard.Cep = order.Client?.Cep;
-            orderDashboard.ProductName = order.Product?.Name;
-            orderDashboard.OrderId = order.Id;
-            orderDashboard.OrderDate = order.OrderDate;
+            try
+            {
+                Order order = await _orderService.Get(id);
+                OrderDashboard orderDashboard = new OrderDashboard();
+                orderDashboard.Document = order.Client?.Document;
+                orderDashboard.Socialname = order.Client?.SocialName;
+                orderDashboard.Cep = order.Client?.Cep;
+                orderDashboard.ProductName = order.Product?.Name;
+                orderDashboard.OrderId = order.Id;
+                orderDashboard.OrderDate = order.OrderDate;
             
-            return Ok(orderDashboard);
+                return Ok(orderDashboard);
+
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Ocorreu um erro ao buscar item: {ex.Message}");
+            }
         }
 
     }
